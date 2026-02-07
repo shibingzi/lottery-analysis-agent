@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{LOTTERY_NAME}}分析报告</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- 免责声明 Banner -->
+    <div class="disclaimer-banner">
+        <div class="container">
+            <h2>⚠️ 重要声明</h2>
+            <p>彩票开奖是完全随机的独立事件，历史数据对未来开奖没有任何预测价值。</p>
+            <p>本报告所有分析仅供娱乐参考，不构成任何形式的投注建议。请理性购彩，量力而行。</p>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="container main-content">
+        <!-- 报告标题 -->
+        <header class="report-header">
+            <h1>🎱 {{LOTTERY_NAME}}分析报告</h1>
+            <div class="meta-info">
+                <span class="badge">{{LOTTERY_TYPE}}</span>
+                <span class="date">分析时间: {{ANALYSIS_TIME}}</span>
+            </div>
+        </header>
+
+        <!-- 概览卡片 -->
+        <section class="overview-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value">{{PERIODS_ANALYZED}}</div>
+                    <div class="stat-label">分析期数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-value">{{START_ISSUE}}</div>
+                    <div class="stat-label">起始期号</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-value">{{END_ISSUE}}</div>
+                    <div class="stat-label">最新期号</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 最新开奖结果 -->
+        <section class="section">
+            <h2 class="section-title">🎲 最新开奖结果</h2>
+            <div class="latest-draw">
+                <div class="draw-info">
+                    <span class="issue">第 {{LATEST_ISSUE}} 期</span>
+                    <span class="date">{{LATEST_DATE}}</span>
+                </div>
+                <div class="balls-container">
+                    {{#IS_SSQ}}
+                    <div class="ball-group">
+                        <span class="label">红球</span>
+                        <div class="balls red-balls">
+                            {{#LATEST_RED_BALLS}}
+                            <span class="ball ball-red">{{.}}</span>
+                            {{/LATEST_RED_BALLS}}
+                        </div>
+                    </div>
+                    <div class="ball-group">
+                        <span class="label">蓝球</span>
+                        <div class="balls blue-balls">
+                            <span class="ball ball-blue">{{LATEST_BLUE_BALL}}</span>
+                        </div>
+                    </div>
+                    {{/IS_SSQ}}
+                    {{#IS_DLT}}
+                    <div class="ball-group">
+                        <span class="label">前区</span>
+                        <div class="balls red-balls">
+                            {{#LATEST_FRONT_ZONE}}
+                            <span class="ball ball-red">{{.}}</span>
+                            {{/LATEST_FRONT_ZONE}}
+                        </div>
+                    </div>
+                    <div class="ball-group">
+                        <span class="label">后区</span>
+                        <div class="balls blue-balls">
+                            {{#LATEST_BACK_ZONE}}
+                            <span class="ball ball-blue">{{.}}</span>
+                            {{/LATEST_BACK_ZONE}}
+                        </div>
+                    </div>
+                    {{/IS_DLT}}
+                </div>
+            </div>
+        </section>
+
+        <!-- 热号冷号分析 -->
+        <section class="section">
+            <h2 class="section-title">🔥❄️ 热号冷号分析</h2>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>热号 TOP10</h3>
+                    <canvas id="hotNumbersChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>冷号 TOP10</h3>
+                    <canvas id="coldNumbersChart"></canvas>
+                </div>
+            </div>
+            <div class="data-tables">
+                <div class="table-wrapper">
+                    <h4>🔥 热号详细数据</h4>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>号码</th>
+                                <th>出现次数</th>
+                                <th>频率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#HOT_NUMBERS}}
+                            <tr>
+                                <td>{{RANK}}</td>
+                                <td><span class="number-tag hot">{{NUMBER}}</span></td>
+                                <td>{{COUNT}}次</td>
+                                <td>{{FREQUENCY}}%</td>
+                            </tr>
+                            {{/HOT_NUMBERS}}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-wrapper">
+                    <h4>❄️ 冷号详细数据</h4>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>号码</th>
+                                <th>出现次数</th>
+                                <th>当前遗漏</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#COLD_NUMBERS}}
+                            <tr>
+                                <td>{{RANK}}</td>
+                                <td><span class="number-tag cold">{{NUMBER}}</span></td>
+                                <td>{{COUNT}}次</td>
+                                <td>{{MISSING}}期</td>
+                            </tr>
+                            {{/COLD_NUMBERS}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 奇偶比分析 -->
+        <section class="section">
+            <h2 class="section-title">⚖️ 奇偶比分布</h2>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <canvas id="oddEvenChart"></canvas>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>奇偶比</th>
+                                <th>出现次数</th>
+                                <th>占比</th>
+                                <th>可视化</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#ODD_EVEN_DATA}}
+                            <tr>
+                                <td><strong>{{RATIO}}</strong></td>
+                                <td>{{COUNT}}次</td>
+                                <td>{{PERCENTAGE}}%</td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: {{PERCENTAGE}}%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {{/ODD_EVEN_DATA}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 大小比分析 -->
+        <section class="section">
+            <h2 class="section-title">📏 大小比分布</h2>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <canvas id="bigSmallChart"></canvas>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>大小比</th>
+                                <th>出现次数</th>
+                                <th>占比</th>
+                                <th>可视化</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#BIG_SMALL_DATA}}
+                            <tr>
+                                <td><strong>{{RATIO}}</strong></td>
+                                <td>{{COUNT}}次</td>
+                                <td>{{PERCENTAGE}}%</td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: {{PERCENTAGE}}%"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {{/BIG_SMALL_DATA}}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 遗漏值分析 -->
+        <section class="section">
+            <h2 class="section-title">📉 遗漏值分析</h2>
+            <div class="chart-container full-width">
+                <canvas id="missingChart"></canvas>
+            </div>
+            <div class="table-wrapper">
+                <h4>当前遗漏值 TOP15</h4>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>号码</th>
+                            <th>当前遗漏</th>
+                            <th>最大遗漏</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#MISSING_DATA}}
+                        <tr>
+                            <td><span class="number-tag {{TAG_CLASS}}">{{NUMBER}}</span></td>
+                            <td>{{CURRENT_MISSING}}期</td>
+                            <td>{{MAX_MISSING}}期</td>
+                            <td><span class="status-badge {{STATUS_CLASS}}">{{STATUS}}</span></td>
+                        </tr>
+                        {{/MISSING_DATA}}
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 连号分析 -->
+        <section class="section">
+            <h2 class="section-title">🔗 连号分析</h2>
+            <div class="stats-grid small">
+                <div class="stat-card">
+                    <div class="stat-value">{{CONSECUTIVE_RATE}}%</div>
+                    <div class="stat-label">出现连号概率</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{CONSECUTIVE_COUNT}}期</div>
+                    <div class="stat-label">出现连号期数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{MOST_COMMON_CONSECUTIVE}}</div>
+                    <div class="stat-label">最常见连号</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 号码分布图 -->
+        <section class="section">
+            <h2 class="section-title">🎯 号码分布热力图</h2>
+            <div class="heatmap-container">
+                <div class="heatmap" id="numberHeatmap">
+                    {{#NUMBER_HEATMAP}}
+                    <div class="heatmap-cell {{HEAT_CLASS}}" title="号码 {{NUMBER}}: 出现 {{COUNT}} 次">
+                        {{NUMBER}}
+                    </div>
+                    {{/NUMBER_HEATMAP}}
+                </div>
+            </div>
+        </section>
+
+        <!-- 固定号码分析（如有） -->
+        {{#HAS_FIXED_NUMBERS}}
+        <section class="section">
+            <h2 class="section-title">🔢 固定号码分析</h2>
+            <div class="fixed-numbers-section">
+                <div class="fixed-input">
+                    <h4>您输入的固定号码</h4>
+                    <div class="fixed-balls">
+                        {{#FIXED_RED}}
+                        <span class="ball ball-red fixed">{{.}}</span>
+                        {{/FIXED_RED}}
+                        {{#FIXED_BLUE}}
+                        <span class="ball ball-blue fixed">{{.}}</span>
+                        {{/FIXED_BLUE}}
+                    </div>
+                </div>
+                <div class="fixed-stats">
+                    <h4>历史表现</h4>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>号码</th>
+                                <th>出现次数</th>
+                                <th>当前遗漏</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#FIXED_STATS}}
+                            <tr>
+                                <td><span class="number-tag {{TYPE_CLASS}}">{{NUMBER}}</span></td>
+                                <td>{{COUNT}}次</td>
+                                <td>{{MISSING}}期</td>
+                                <td><span class="status-badge {{STATUS_CLASS}}">{{STATUS}}</span></td>
+                            </tr>
+                            {{/FIXED_STATS}}
+                        </tbody>
+                    </table>
+                </div>
+                <div class="recommendations">
+                    <h4>🎲 娱乐性推荐组合</h4>
+                    {{#RECOMMENDED_COMBINATIONS}}
+                    <div class="recommendation-item">
+                        <span class="combo-id">组合 {{ID}}</span>
+                        <div class="combo-balls">
+                            {{#RED_BALLS}}
+                            <span class="ball ball-red small">{{.}}</span>
+                            {{/RED_BALLS}}
+                            <span class="ball ball-blue small">{{BLUE_BALL}}</span>
+                        </div>
+                        <span class="combo-strategy">{{STRATEGY}}</span>
+                    </div>
+                    {{/RECOMMENDED_COMBINATIONS}}
+                </div>
+            </div>
+        </section>
+        {{/HAS_FIXED_NUMBERS}}
+
+        <!-- 页脚 -->
+        <footer class="report-footer">
+            <div class="footer-content">
+                <p class="disclaimer-text">
+                    ⚠️ 免责声明：本报告所有数据和分析仅供娱乐参考，不构成任何形式的投注建议。
+                    彩票开奖是完全随机的独立事件，历史数据对未来开奖没有任何预测价值。
+                </p>
+                <p class="source-info">
+                    数据来源: 中国福彩/体彩官网 | 报告生成时间: {{ANALYSIS_TIME}}
+                </p>
+                <p class="copyright">
+                    Lottery Analysis Agent v1.0.0 | Generated by Claude Code
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Chart.js 配置脚本 -->
+    <script>
+        // 热号图表
+        const hotCtx = document.getElementById('hotNumbersChart').getContext('2d');
+        new Chart(hotCtx, {
+            type: 'bar',
+            data: {
+                labels: {{HOT_LABELS}},
+                datasets: [{
+                    label: '出现次数',
+                    data: {{HOT_DATA}},
+                    backgroundColor: '#F97316',
+                    borderColor: '#EA580C',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // 冷号图表
+        const coldCtx = document.getElementById('coldNumbersChart').getContext('2d');
+        new Chart(coldCtx, {
+            type: 'bar',
+            data: {
+                labels: {{COLD_LABELS}},
+                datasets: [{
+                    label: '遗漏期数',
+                    data: {{COLD_DATA}},
+                    backgroundColor: '#06B6D4',
+                    borderColor: '#0891B2',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // 奇偶比饼图
+        const oddEvenCtx = document.getElementById('oddEvenChart').getContext('2d');
+        new Chart(oddEvenCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{ODD_EVEN_LABELS}},
+                datasets: [{
+                    data: {{ODD_EVEN_VALUES}},
+                    backgroundColor: [
+                        '#EF4444',
+                        '#3B82F6',
+                        '#10B981',
+                        '#F59E0B',
+                        '#8B5CF6'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // 大小比饼图
+        const bigSmallCtx = document.getElementById('bigSmallChart').getContext('2d');
+        new Chart(bigSmallCtx, {
+            type: 'doughnut',
+            data: {
+                labels: {{BIG_SMALL_LABELS}},
+                datasets: [{
+                    data: {{BIG_SMALL_VALUES}},
+                    backgroundColor: [
+                        '#EC4899',
+                        '#06B6D4',
+                        '#84CC16',
+                        '#F97316',
+                        '#6366F1'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // 遗漏值柱状图
+        const missingCtx = document.getElementById('missingChart').getContext('2d');
+        new Chart(missingCtx, {
+            type: 'bar',
+            data: {
+                labels: {{MISSING_LABELS}},
+                datasets: [{
+                    label: '当前遗漏期数',
+                    data: {{MISSING_VALUES}},
+                    backgroundColor: '#3B82F6',
+                    borderColor: '#2563EB',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
