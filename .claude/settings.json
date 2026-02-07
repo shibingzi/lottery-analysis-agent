@@ -1,0 +1,68 @@
+{
+  "project": {
+    "name": "Lottery Analysis Agent",
+    "description": "Professional lottery data analysis system supporting SSQ, DLT and other lottery types",
+    "version": "1.0.0",
+    "language": "zh-CN"
+  },
+  "agents": {
+    "enabled": true,
+    "agents_dir": ".claude/agents"
+  },
+  "skills": {
+    "enabled": true,
+    "skills_dir": ".claude/skills",
+    "auto_load": true
+  },
+  "tools": {
+    "allowed": [
+      "Read",
+      "Write",
+      "Edit",
+      "Glob",
+      "Grep",
+      "Bash",
+      "WebSearch",
+      "WebFetch"
+    ],
+    "restricted": []
+  },
+  "web_search": {
+    "enabled": true,
+    "max_results": 10,
+    "default_type": "auto"
+  },
+  "web_fetch": {
+    "enabled": true,
+    "timeout": 30,
+    "default_format": "markdown"
+  },
+  "logging": {
+    "level": "info",
+    "log_dir": "logs",
+    "save_conversations": true
+  },
+  "disclaimer": {
+    "required": true,
+    "message": "⚠️ 重要声明：彩票开奖是完全随机的独立事件，历史数据对未来开奖没有任何预测价值。本系统所有分析仅供娱乐参考，不构成任何形式的投注建议。请理性购彩，量力而行。",
+    "show_on_start": true,
+    "include_in_reports": true
+  },
+  "lottery_config": {
+    "config_file": ".claude/config/lottery_config.json",
+    "data_dir": "data",
+    "cache_dir": "data/cache",
+    "default_periods": 100
+  },
+  "security": {
+    "allow_code_execution": true,
+    "restrict_file_access": false,
+    "allowed_paths": [
+      "scripts/",
+      "data/",
+      "templates/",
+      "docs/",
+      "logs/"
+    ]
+  }
+}

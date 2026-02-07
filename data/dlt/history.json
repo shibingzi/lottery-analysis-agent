@@ -1,0 +1,57 @@
+[
+  {
+    "lottery_type": "dlt",
+    "issue": "25023",
+    "draw_date": "2025-03-01",
+    "front_zone": [5, 12, 23, 28, 35],
+    "back_zone": [3, 9],
+    "prize_info": {
+      "jackpot": "3注",
+      "jackpot_amount": "1000万元/注"
+    }
+  },
+  {
+    "lottery_type": "dlt",
+    "issue": "25022",
+    "draw_date": "2025-02-26",
+    "front_zone": [7, 14, 19, 25, 33],
+    "back_zone": [2, 11],
+    "prize_info": {
+      "jackpot": "2注",
+      "jackpot_amount": "1000万元/注"
+    }
+  },
+  {
+    "lottery_type": "dlt",
+    "issue": "25021",
+    "draw_date": "2025-02-24",
+    "front_zone": [3, 11, 18, 27, 34],
+    "back_zone": [5, 8],
+    "prize_info": {
+      "jackpot": "5注",
+      "jackpot_amount": "778万元/注"
+    }
+  },
+  {
+    "lottery_type": "dlt",
+    "issue": "25020",
+    "draw_date": "2025-02-22",
+    "front_zone": [9, 16, 22, 29, 31],
+    "back_zone": [4, 10],
+    "prize_info": {
+      "jackpot": "1注",
+      "jackpot_amount": "1000万元/注"
+    }
+  },
+  {
+    "lottery_type": "dlt",
+    "issue": "25019",
+    "draw_date": "2025-02-19",
+    "front_zone": [6, 13, 21, 26, 32],
+    "back_zone": [1, 12],
+    "prize_info": {
+      "jackpot": "4注",
+      "jackpot_amount": "1000万元/注"
+    }
+  }
+]

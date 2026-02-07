@@ -1,0 +1,57 @@
+[
+  {
+    "lottery_type": "ssq",
+    "issue": "2025023",
+    "draw_date": "2025-03-02",
+    "red_balls": [3, 7, 12, 18, 25, 30],
+    "blue_ball": 14,
+    "prize_info": {
+      "jackpot": "5注",
+      "jackpot_amount": "1000万元/注"
+    }
+  },
+  {
+    "lottery_type": "ssq",
+    "issue": "2025022",
+    "draw_date": "2025-02-27",
+    "red_balls": [5, 12, 19, 22, 29, 33],
+    "blue_ball": 8,
+    "prize_info": {
+      "jackpot": "3注",
+      "jackpot_amount": "1000万元/注"
+    }
+  },
+  {
+    "lottery_type": "ssq",
+    "issue": "2025021",
+    "draw_date": "2025-02-25",
+    "red_balls": [7, 16, 20, 25, 28, 31],
+    "blue_ball": 6,
+    "prize_info": {
+      "jackpot": "8注",
+      "jackpot_amount": "778万元/注"
+    }
+  },
+  {
+    "lottery_type": "ssq",
+    "issue": "2025020",
+    "draw_date": "2025-02-23",
+    "red_balls": [2, 8, 16, 24, 28, 30],
+    "blue_ball": 12,
+    "prize_info": {
+      "jackpot": "2注",
+      "jackpot_amount": "1000万元/注"
+    }
+  },
+  {
+    "lottery_type": "ssq",
+    "issue": "2025019",
+    "draw_date": "2025-02-20",
+    "red_balls": [9, 15, 21, 24, 27, 32],
+    "blue_ball": 5,
+    "prize_info": {
+      "jackpot": "4注",
+      "jackpot_amount": "1000万元/注"
+    }
+  }
+]
