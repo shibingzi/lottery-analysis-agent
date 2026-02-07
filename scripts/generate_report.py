@@ -301,26 +301,34 @@ class ReportGenerator:
         
         # 生成所有号码的统计数据
         all_counts = {num: counter.get(num, 0) for num in numbers_range}
-        max_count = max(all_counts.values()) if all_counts else 1
+        
+        # 计算百分位数阈值（确保均匀分布）
+        sorted_counts = sorted(all_counts.values())
+        n = len(sorted_counts)
+        
+        # 计算四分位数
+        p25 = sorted_counts[int(n * 0.25)] if n > 0 else 0
+        p50 = sorted_counts[int(n * 0.50)] if n > 0 else 0
+        p75 = sorted_counts[int(n * 0.75)] if n > 0 else 0
+        p90 = sorted_counts[int(n * 0.90)] if n > 0 else 0
         
         heatmap_data = []
         for num in numbers_range:
             count = all_counts[num]
-            # 根据频率确定热度等级
-            if max_count > 0:
-                ratio = count / max_count
-                if ratio >= 0.8:
-                    heat_class = "hot-3"
-                elif ratio >= 0.6:
-                    heat_class = "hot-2"
-                elif ratio >= 0.4:
-                    heat_class = "hot-1"
-                elif count > 0:
-                    heat_class = "heat-1"
-                else:
-                    heat_class = "cold"
+            # 根据百分位数确定热度等级
+            # 这样确保每个等级分布更均匀
+            if count >= p90:
+                heat_class = "hot-3"  # 最热（前10%）
+            elif count >= p75:
+                heat_class = "hot-2"  # 很热（前25%）
+            elif count >= p50:
+                heat_class = "hot-1"  # 较热（前50%）
+            elif count >= p25:
+                heat_class = "heat-1"  # 温热（前75%）
+            elif count > 0:
+                heat_class = "heat-0"  # 微温（后25%但>0）
             else:
-                heat_class = "cold"
+                heat_class = "cold"  # 冷号（0次）
             
             heatmap_data.append({
                 "NUMBER": self._format_number(num),
