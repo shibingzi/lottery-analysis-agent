@@ -1,0 +1,158 @@
+{
+  "lottery_types": {
+    "ssq": {
+      "name": "双色球",
+      "name_en": "Double Color Ball",
+      "type": "numeric",
+      "red_balls": {
+        "count": 6,
+        "min": 1,
+        "max": 33
+      },
+      "blue_ball": {
+        "count": 1,
+        "min": 1,
+        "max": 16
+      },
+      "draw_schedule": {
+        "frequency": "weekly",
+        "days": [2, 4, 7],
+        "time": "21:15"
+      },
+      "prize_structure": {
+        "first_prize": {
+          "name": "一等奖",
+          "match_rule": "6+1",
+          "odds": "1/17721088"
+        },
+        "second_prize": {
+          "name": "二等奖",
+          "match_rule": "6+0",
+          "odds": "1/1181406"
+        },
+        "third_prize": {
+          "name": "三等奖",
+          "match_rule": "5+1",
+          "odds": "1/110388"
+        },
+        "fourth_prize": {
+          "name": "四等奖",
+          "match_rule": "5+0或4+1",
+          "odds": "1/2303"
+        },
+        "fifth_prize": {
+          "name": "五等奖",
+          "match_rule": "4+0或3+1",
+          "odds": "1/129"
+        },
+        "sixth_prize": {
+          "name": "六等奖",
+          "match_rule": "2+1或1+1或0+1",
+          "odds": "1/16"
+        }
+      },
+      "data_sources": [
+        "http://www.cwl.gov.cn/",
+        "https://www.lottery.gov.cn/"
+      ],
+      "analysis_config": {
+        "hot_cold_periods": [50, 100, 200],
+        "size_boundary": 16,
+        "zone_division": {
+          "zone1": [1, 11],
+          "zone2": [12, 22],
+          "zone3": [23, 33]
+        }
+      }
+    },
+    "dlt": {
+      "name": "大乐透",
+      "name_en": "Super Lotto",
+      "type": "numeric",
+      "front_zone": {
+        "count": 5,
+        "min": 1,
+        "max": 35
+      },
+      "back_zone": {
+        "count": 2,
+        "min": 1,
+        "max": 12
+      },
+      "draw_schedule": {
+        "frequency": "weekly",
+        "days": [1, 3, 6],
+        "time": "21:25"
+      },
+      "prize_structure": {
+        "first_prize": {
+          "name": "一等奖",
+          "match_rule": "5+2",
+          "odds": "1/21425712"
+        },
+        "second_prize": {
+          "name": "二等奖",
+          "match_rule": "5+1",
+          "odds": "1/1071286"
+        },
+        "third_prize": {
+          "name": "三等奖",
+          "match_rule": "5+0",
+          "odds": "1/141190"
+        },
+        "fourth_prize": {
+          "name": "四等奖",
+          "match_rule": "4+2",
+          "odds": "1/9696"
+        },
+        "fifth_prize": {
+          "name": "五等奖",
+          "match_rule": "4+1",
+          "odds": "1/4848"
+        },
+        "sixth_prize": {
+          "name": "六等奖",
+          "match_rule": "3+2",
+          "odds": "1/1616"
+        },
+        "seventh_prize": {
+          "name": "七等奖",
+          "match_rule": "4+0",
+          "odds": "1/808"
+        },
+        "eighth_prize": {
+          "name": "八等奖",
+          "match_rule": "3+1或2+2",
+          "odds": "1/81"
+        },
+        "ninth_prize": {
+          "name": "九等奖",
+          "match_rule": "3+0或2+1或1+2或0+2",
+          "odds": "1/8"
+        }
+      },
+      "data_sources": [
+        "https://www.lottery.gov.cn/",
+        "http://www.cwl.gov.cn/"
+      ],
+      "analysis_config": {
+        "hot_cold_periods": [50, 100, 200],
+        "size_boundary": 18,
+        "zone_division": {
+          "zone1": [1, 7],
+          "zone2": [8, 14],
+          "zone3": [15, 21],
+          "zone4": [22, 28],
+          "zone5": [29, 35]
+        }
+      }
+    }
+  },
+  "global_settings": {
+    "default_analysis_period": 100,
+    "max_history_period": 1000,
+    "cache_duration_hours": 24,
+    "disclaimer_required": true,
+    "entertainment_only": true
+  }
+}
