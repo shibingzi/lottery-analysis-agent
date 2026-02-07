@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>彩票分析助手 - 专业彩票数据分析平台</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/analysis.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- 免责声明横幅 -->
+    <div class="disclaimer-banner">
+        <div class="container">
+            <i class="fas fa-exclamation-triangle"></i>
+            <span>⚠️ 重要提示：彩票开奖是完全随机的独立事件，本网站所有分析仅供娱乐参考，不构成投注建议。请理性购彩，量力而行。</span>
+        </div>
+    </div>
+
+    <!-- 导航栏 -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <i class="fas fa-chart-line"></i>
+                <span>彩票分析助手</span>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#home" class="active">首页</a></li>
+                <li><a href="#analysis">数据分析</a></li>
+                <li><a href="#fixed">固定号码</a></li>
+                <li><a href="#reports">历史报告</a></li>
+                <li><a href="#about">关于</a></li>
+            </ul>
+            <div class="nav-toggle">
+                <i class="fas fa-bars"></i>
+            </div>
+        </div>
+    </nav>
+
+    <!-- 主内容区 -->
+    <main>
+        <!-- 首页部分 -->
+        <section id="home" class="hero-section">
+            <div class="container">
+                <div class="hero-content">
+                    <h1>🎱 专业彩票数据分析平台</h1>
+                    <p class="hero-subtitle">基于真实历史数据的统计分析，助您了解号码趋势</p>
+                    <div class="hero-stats">
+                        <div class="stat-card">
+                            <i class="fas fa-database"></i>
+                            <span class="stat-number">243</span>
+                            <span class="stat-label">双色球数据</span>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-database"></i>
+                            <span class="stat-number">178</span>
+                            <span class="stat-label">大乐透数据</span>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-chart-bar"></i>
+                            <span class="stat-number">8</span>
+                            <span class="stat-label">分析维度</span>
+                        </div>
+                    </div>
+                    <div class="hero-actions">
+                        <button class="btn btn-primary" onclick="showSection('analysis')">
+                            <i class="fas fa-chart-pie"></i> 开始分析
+                        </button>
+                        <button class="btn btn-secondary" onclick="showSection('fixed')">
+                            <i class="fas fa-fingerprint"></i> 固定号码
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 数据分析部分 -->
+        <section id="analysis" class="section">
+            <div class="container">
+                <h2 class="section-title">
+                    <i class="fas fa-chart-line"></i>
+                    数据分析中心
+                </h2>
+
+                <!-- 彩种选择 -->
+                <div class="lottery-selector">
+                    <button class="lottery-btn active" data-type="ssq" onclick="switchLottery('ssq')">
+                        <span class="lottery-icon">🔴</span>
+                        <span class="lottery-name">双色球</span>
+                        <span class="lottery-desc">6红球 + 1蓝球</span>
+                    </button>
+                    <button class="lottery-btn" data-type="dlt" onclick="switchLottery('dlt')">
+                        <span class="lottery-icon">🔵</span>
+                        <span class="lottery-name">大乐透</span>
+                        <span class="lottery-desc">5前区 + 2后区</span>
+                    </button>
+                </div>
+
+                <!-- 分析期数选择 -->
+                <div class="period-selector">
+                    <label>分析期数：</label>
+                    <select id="periodSelect" onchange="updateAnalysis()">
+                        <option value="50">最近50期</option>
+                        <option value="100" selected>最近100期</option>
+                        <option value="200">最近200期</option>
+                        <option value="all">全部历史</option>
+                    </select>
+                    <button class="btn btn-primary" onclick="runAnalysis()">
+                        <i class="fas fa-play"></i> 运行分析
+                    </button>
+                </div>
+
+                <!-- 分析结果展示 -->
+                <div id="analysisResults" class="analysis-results">
+                    <!-- 动态加载分析结果 -->
+                    <div class="placeholder">
+                        <i class="fas fa-chart-area"></i>
+                        <p>请选择彩种和期数，点击"运行分析"查看结果</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 固定号码分析部分 -->
+        <section id="fixed" class="section">
+            <div class="container">
+                <h2 class="section-title">
+                    <i class="fas fa-fingerprint"></i>
+                    固定号码分析
+                </h2>
+
+                <div class="fixed-analysis-container">
+                    <!-- 左侧：号码输入 -->
+                    <div class="fixed-input-panel">
+                        <div class="lottery-tabs">
+                            <button class="tab-btn active" data-tab="ssq-fixed">双色球</button>
+                            <button class="tab-btn" data-tab="dlt-fixed">大乐透</button>
+                        </div>
+
+                        <!-- 双色球输入 -->
+                        <div id="ssq-fixed-panel" class="tab-panel active">
+                            <div class="input-group">
+                                <label>固定红球（最多6个）</label>
+                                <div class="ball-inputs red-balls">
+                                    <input type="number" min="1" max="33" placeholder="01" class="ball-input" id="ssq-red-1">
+                                    <input type="number" min="1" max="33" placeholder="02" class="ball-input" id="ssq-red-2">
+                                    <input type="number" min="1" max="33" placeholder="03" class="ball-input" id="ssq-red-3">
+                                    <input type="number" min="1" max="33" placeholder="04" class="ball-input" id="ssq-red-4">
+                                    <input type="number" min="1" max="33" placeholder="05" class="ball-input" id="ssq-red-5">
+                                    <input type="number" min="1" max="33" placeholder="06" class="ball-input" id="ssq-red-6">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>固定蓝球（1个）</label>
+                                <div class="ball-inputs blue-balls">
+                                    <input type="number" min="1" max="16" placeholder="01" class="ball-input" id="ssq-blue-1">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 大乐透输入 -->
+                        <div id="dlt-fixed-panel" class="tab-panel">
+                            <div class="input-group">
+                                <label>固定前区（最多5个）</label>
+                                <div class="ball-inputs red-balls">
+                                    <input type="number" min="1" max="35" placeholder="01" class="ball-input" id="dlt-front-1">
+                                    <input type="number" min="1" max="35" placeholder="02" class="ball-input" id="dlt-front-2">
+                                    <input type="number" min="1" max="35" placeholder="03" class="ball-input" id="dlt-front-3">
+                                    <input type="number" min="1" max="35" placeholder="04" class="ball-input" id="dlt-front-4">
+                                    <input type="number" min="1" max="35" placeholder="05" class="ball-input" id="dlt-front-5">
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <label>固定后区（最多2个）</label>
+                                <div class="ball-inputs blue-balls">
+                                    <input type="number" min="1" max="12" placeholder="01" class="ball-input" id="dlt-back-1">
+                                    <input type="number" min="1" max="12" placeholder="02" class="ball-input" id="dlt-back-2">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="input-actions">
+                            <button class="btn btn-primary" onclick="analyzeFixedNumbers()">
+                                <i class="fas fa-search"></i> 分析号码
+                            </button>
+                            <button class="btn btn-secondary" onclick="generateCombinations()">
+                                <i class="fas fa-magic"></i> 生成组合
+                            </button>
+                            <button class="btn btn-outline" onclick="clearFixedInputs()">
+                                <i class="fas fa-trash"></i> 清空
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 右侧：分析结果 -->
+                    <div class="fixed-result-panel">
+                        <div id="fixedAnalysisResult" class="result-placeholder">
+                            <i class="fas fa-chart-pie"></i>
+                            <p>输入您的固定号码，点击"分析号码"查看结果</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 历史报告部分 -->
+        <section id="reports" class="section">
+            <div class="container">
+                <h2 class="section-title">
+                    <i class="fas fa-history"></i>
+                    历史分析报告
+                </h2>
+                <div class="reports-grid" id="reportsGrid">
+                    <!-- 动态加载历史报告 -->
+                </div>
+            </div>
+        </section>
+
+        <!-- 关于部分 -->
+        <section id="about" class="section">
+            <div class="container">
+                <h2 class="section-title">
+                    <i class="fas fa-info-circle"></i>
+                    关于本项目
+                </h2>
+                <div class="about-content">
+                    <div class="about-card">
+                        <h3>🎯 项目简介</h3>
+                        <p>彩票分析助手是一个基于Python和JavaScript开发的彩票数据分析平台。我们收集并分析双色球和大乐透的历史开奖数据，通过统计学方法为您提供数据可视化分析。</p>
+                    </div>
+                    <div class="about-card">
+                        <h3>📊 数据来源</h3>
+                        <p>所有数据均来自官方开奖记录，通过GitHub开源项目 <a href="https://github.com/gudaoxuri/lottery_history" target="_blank">lottery_history</a> 获取，每天自动更新。</p>
+                        <ul>
+                            <li>双色球：243期历史数据</li>
+                            <li>大乐透：178期历史数据</li>
+                        </ul>
+                    </div>
+                    <div class="about-card">
+                        <h3>⚠️ 重要声明</h3>
+                        <p><strong>本网站所有分析仅供娱乐参考，不构成投注建议。</strong></p>
+                        <p>彩票开奖是完全随机的独立事件，历史数据对未来开奖没有任何预测价值。每个号码在每期中奖的概率是相等的。</p>
+                    </div>
+                    <div class="about-card">
+                        <h3>🛠️ 技术栈</h3>
+                        <div class="tech-stack">
+                            <span class="tech-badge">Python</span>
+                            <span class="tech-badge">JavaScript</span>
+                            <span class="tech-badge">Chart.js</span>
+                            <span class="tech-badge">HTML5</span>
+                            <span class="tech-badge">CSS3</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- 页脚 -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <i class="fas fa-chart-line"></i>
+                    <span>彩票分析助手</span>
+                </div>
+                <p class="footer-text">数据真实 · 分析客观 · 娱乐性质</p>
+                <p class="footer-warning">⚠️ 理性购彩 · 量力而行</p>
+                <p class="footer-copyright">© 2026 彩票分析助手 | 仅供娱乐参考</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script src="js/app.js"></script>
+</body>
+</html>
