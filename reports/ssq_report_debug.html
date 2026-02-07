@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>双色球分析报告</title>
+    <style>
+/* Lottery Analysis Report Styles */
+/* shadcn/ui Zinc Dark Theme */
+
+:root {
+    --background: #09090B;
+    --card: #18181B;
+    --card-hover: #27272A;
+    --border: #27272A;
+    --border-light: #3F3F46;
+    --text-primary: #FAFAFA;
+    --text-secondary: #A1A1AA;
+    --text-muted: #71717A;
+    
+    /* Lottery Colors */
+    --ball-red: #EF4444;
+    --ball-red-dark: #DC2626;
+    --ball-blue: #3B82F6;
+    --ball-blue-dark: #2563EB;
+    
+    /* Status Colors */
+    --hot: #F97316;
+    --cold: #06B6D4;
+    --success: #10B981;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    background-color: var(--background);
+    color: var(--text-primary);
+    line-height: 1.6;
+    min-height: 100vh;
+}
+
+/* Container */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Disclaimer Banner */
+.disclaimer-banner {
+    background: linear-gradient(135deg, #7C2D12 0%, #9A3412 100%);
+    border-bottom: 2px solid #EA580C;
+    padding: 20px 0;
+    text-align: center;
+}
+
+.disclaimer-banner h2 {
+    color: #FEF3C7;
+    font-size: 1.25rem;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.disclaimer-banner p {
+    color: #FDE68A;
+    font-size: 0.9rem;
+    margin: 5px 0;
+}
+
+/* Main Content */
+.main-content {
+    padding: 40px 20px;
+}
+
+/* Report Header */
+.report-header {
+    text-align: center;
+    margin-bottom: 40px;
+    padding-bottom: 30px;
+    border-bottom: 1px solid var(--border);
+}
+
+.report-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 15px;
+    background: linear-gradient(135deg, #FAFAFA 0%, #A1A1AA 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+.meta-info {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.badge {
+    background: var(--card);
+    border: 1px solid var(--border);
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.date {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Sections */
+.section {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 30px;
+    margin-bottom: 30px;
+    transition: border-color 0.3s ease;
+}
+
+.section:hover {
+    border-color: var(--border-light);
+}
+
+.section-title {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 25px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+/* Overview Section */
+.overview-section {
+    margin-bottom: 30px;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.stats-grid.small {
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+}
+
+.stat-card {
+    background: var(--background);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    border-color: var(--border-light);
+}
+
+.stat-icon {
+    font-size: 2rem;
+    margin-bottom: 10px;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+/* Latest Draw */
+.latest-draw {
+    background: var(--background);
+    border-radius: 12px;
+    padding: 25px;
+    text-align: center;
+}
+
+.draw-info {
+    margin-bottom: 20px;
+}
+
+.issue {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-right: 15px;
+}
+
+.date {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+.balls-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    align-items: center;
+}
+
+.ball-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.label {
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    min-width: 40px;
+}
+
+.balls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* Balls */
+.ball {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+    transition: transform 0.2s ease;
+}
+
+.ball:hover {
+    transform: scale(1.1);
+}
+
+.ball-red {
+    background: linear-gradient(135deg, var(--ball-red) 0%, var(--ball-red-dark) 100%);
+    color: white;
+}
+
+.ball-blue {
+    background: linear-gradient(135deg, var(--ball-blue) 0%, var(--ball-blue-dark) 100%);
+    color: white;
+}
+
+.ball.small {
+    width: 40px;
+    height: 40px;
+    font-size: 0.9rem;
+}
+
+.ball.fixed {
+    box-shadow: 0 0 0 3px var(--warning), 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Charts Grid */
+.charts-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+    gap: 30px;
+    margin-bottom: 30px;
+}
+
+.chart-container {
+    background: var(--background);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.chart-container h3 {
+    font-size: 1.1rem;
+    margin-bottom: 15px;
+    color: var(--text-secondary);
+}
+
+.chart-container.full-width {
+    grid-column: 1 / -1;
+}
+
+/* Data Tables */
+.data-tables {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 30px;
+}
+
+.table-wrapper {
+    background: var(--background);
+    border-radius: 12px;
+    padding: 20px;
+    overflow-x: auto;
+}
+
+.table-wrapper h4 {
+    font-size: 1rem;
+    margin-bottom: 15px;
+    color: var(--text-secondary);
+}
+
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.9rem;
+}
+
+.data-table th,
+.data-table td {
+    padding: 12px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+}
+
+.data-table th {
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+}
+
+.data-table tr:hover {
+    background: var(--card-hover);
+}
+
+/* Number Tags */
+.number-tag {
+    display: inline-block;
+    padding: 5px 12px;
+    border-radius: 20px;
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.number-tag.hot {
+    background: rgba(249, 115, 22, 0.2);
+    color: var(--hot);
+    border: 1px solid var(--hot);
+}
+
+.number-tag.cold {
+    background: rgba(6, 182, 212, 0.2);
+    color: var(--cold);
+    border: 1px solid var(--cold);
+}
+
+.number-tag.red {
+    background: rgba(239, 68, 68, 0.2);
+    color: var(--ball-red);
+    border: 1px solid var(--ball-red);
+}
+
+.number-tag.blue {
+    background: rgba(59, 130, 246, 0.2);
+    color: var(--ball-blue);
+    border: 1px solid var(--ball-blue);
+}
+
+/* Status Badges */
+.status-badge {
+    display: inline-block;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.status-badge.hot {
+    background: rgba(249, 115, 22, 0.2);
+    color: var(--hot);
+}
+
+.status-badge.cold {
+    background: rgba(6, 182, 212, 0.2);
+    color: var(--cold);
+}
+
+.status-badge.normal {
+    background: rgba(161, 161, 170, 0.2);
+    color: var(--text-secondary);
+}
+
+/* Progress Bar */
+.progress-bar {
+    width: 100%;
+    height: 8px;
+    background: var(--border);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--ball-red), var(--hot));
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+/* Heatmap */
+.heatmap-container {
+    background: var(--background);
+    border-radius: 12px;
+    padding: 20px;
+    overflow-x: auto;
+}
+
+.heatmap {
+    display: grid;
+    grid-template-columns: repeat(11, 1fr);
+    gap: 5px;
+    min-width: 400px;
+}
+
+.heatmap-cell {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.heatmap-cell:hover {
+    transform: scale(1.1);
+}
+
+.heatmap-cell.heat-0 {
+    background: var(--border);
+    color: var(--text-muted);
+}
+
+.heatmap-cell.heat-1 {
+    background: rgba(6, 182, 212, 0.3);
+    color: var(--cold);
+}
+
+.heatmap-cell.heat-2 {
+    background: rgba(6, 182, 212, 0.5);
+    color: #22D3EE;
+}
+
+.heatmap-cell.heat-3 {
+    background: rgba(249, 115, 22, 0.3);
+    color: #FB923C;
+}
+
+.heatmap-cell.heat-4 {
+    background: rgba(249, 115, 22, 0.5);
+    color: #F97316;
+}
+
+.heatmap-cell.heat-5 {
+    background: rgba(239, 68, 68, 0.5);
+    color: #EF4444;
+}
+
+/* Fixed Numbers Section */
+.fixed-numbers-section {
+    display: grid;
+    gap: 30px;
+}
+
+.fixed-input,
+.fixed-stats,
+.recommendations {
+    background: var(--background);
+    border-radius: 12px;
+    padding: 20px;
+}
+
+.fixed-balls {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-top: 15px;
+}
+
+.recommendation-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: var(--card);
+    border-radius: 8px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.combo-id {
+    font-weight: 600;
+    color: var(--text-secondary);
+    min-width: 60px;
+}
+
+.combo-balls {
+    display: flex;
+    gap: 5px;
+    flex-wrap: wrap;
+}
+
+.combo-strategy {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    margin-left: auto;
+}
+
+/* Footer */
+.report-footer {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 30px;
+    margin-top: 40px;
+    text-align: center;
+}
+
+.footer-content {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.disclaimer-text {
+    color: var(--warning);
+    font-size: 0.9rem;
+    margin-bottom: 15px;
+    padding: 15px;
+    background: rgba(245, 158, 11, 0.1);
+    border-radius: 8px;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.source-info {
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+    margin-bottom: 10px;
+}
+
+.copyright {
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .report-header h1 {
+        font-size: 1.75rem;
+    }
+    
+    .section {
+        padding: 20px;
+    }
+    
+    .charts-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .ball {
+        width: 40px;
+        height: 40px;
+        font-size: 0.9rem;
+    }
+    
+    .heatmap {
+        grid-template-columns: repeat(7, 1fr);
+    }
+    
+    .recommendation-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    
+    .combo-strategy {
+        margin-left: 0;
+        margin-top: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .data-tables {
+        grid-template-columns: 1fr;
+    }
+    
+    .heatmap {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+/* Print Styles */
+@media print {
+    body {
+        background: white;
+        color: black;
+    }
+    
+    .disclaimer-banner {
+        background: #f0f0f0 !important;
+        border: 2px solid #999;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+    }
+    
+    .section {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+}
+
+</style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- 免责声明 Banner -->
+    <div class="disclaimer-banner">
+        <div class="container">
+            <h2>⚠️ 重要声明</h2>
+            <p>彩票开奖是完全随机的独立事件，历史数据对未来开奖没有任何预测价值。</p>
+            <p>本报告所有分析仅供娱乐参考，不构成任何形式的投注建议。请理性购彩，量力而行。</p>
+        </div>
+    </div>
+
+    <!-- 主内容区 -->
+    <div class="container main-content">
+        <!-- 报告标题 -->
+        <header class="report-header">
+            <h1>🎱 双色球分析报告</h1>
+            <div class="meta-info">
+                <span class="badge">SSQ</span>
+                <span class="date">分析时间: 2026-02-07 23:35:16</span>
+            </div>
+        </header>
+
+        <!-- 概览卡片 -->
+        <section class="overview-section">
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon">📊</div>
+                    <div class="stat-value">23</div>
+                    <div class="stat-label">分析期数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">📅</div>
+                    <div class="stat-value">2025001</div>
+                    <div class="stat-label">起始期号</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon">🎯</div>
+                    <div class="stat-value">2025023</div>
+                    <div class="stat-label">最新期号</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 最新开奖结果 -->
+        <section class="section">
+            <h2 class="section-title">🎲 最新开奖结果</h2>
+            <div class="latest-draw">
+                <div class="draw-info">
+                    <span class="issue">第 2025023 期</span>
+                    <span class="date">2025-03-02</span>
+                </div>
+                <div class="balls-container">
+                    {{#IS_SSQ}}
+                    <div class="ball-group">
+                        <span class="label">红球</span>
+                        <div class="balls red-balls">
+                            {{#LATEST_RED_BALLS}}
+                            <span class="ball ball-red">{{.}}</span>
+                            
+                        </div>
+                    </div>
+                    <div class="ball-group">
+                        <span class="label">蓝球</span>
+                        <div class="balls blue-balls">
+                            <span class="ball ball-blue">14</span>
+                        </div>
+                    </div>
+                    
+                    {{#IS_DLT}}
+                    <div class="ball-group">
+                        <span class="label">前区</span>
+                        <div class="balls red-balls">
+                            {{#LATEST_FRONT_ZONE}}
+                            <span class="ball ball-red">{{.}}</span>
+                            
+                        </div>
+                    </div>
+                    <div class="ball-group">
+                        <span class="label">后区</span>
+                        <div class="balls blue-balls">
+                            {{#LATEST_BACK_ZONE}}
+                            <span class="ball ball-blue">{{.}}</span>
+                            
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+        </section>
+
+        <!-- 热号冷号分析 -->
+        <section class="section">
+            <h2 class="section-title">🔥❄️ 热号冷号分析</h2>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <h3>热号 TOP10</h3>
+                    <canvas id="hotNumbersChart"></canvas>
+                </div>
+                <div class="chart-container">
+                    <h3>冷号 TOP10</h3>
+                    <canvas id="coldNumbersChart"></canvas>
+                </div>
+            </div>
+            <div class="data-tables">
+                <div class="table-wrapper">
+                    <h4>🔥 热号详细数据</h4>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>号码</th>
+                                <th>出现次数</th>
+                                <th>频率</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#HOT_NUMBERS}}
+                            <tr>
+                                <td></td>
+                                <td><span class="number-tag hot"></span></td>
+                                <td>次</td>
+                                <td>%</td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+                <div class="table-wrapper">
+                    <h4>❄️ 冷号详细数据</h4>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>排名</th>
+                                <th>号码</th>
+                                <th>出现次数</th>
+                                <th>当前遗漏</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#COLD_NUMBERS}}
+                            <tr>
+                                <td></td>
+                                <td><span class="number-tag cold"></span></td>
+                                <td>次</td>
+                                <td>期</td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 奇偶比分析 -->
+        <section class="section">
+            <h2 class="section-title">⚖️ 奇偶比分布</h2>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <canvas id="oddEvenChart"></canvas>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>奇偶比</th>
+                                <th>出现次数</th>
+                                <th>占比</th>
+                                <th>可视化</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#ODD_EVEN_DATA}}
+                            <tr>
+                                <td><strong></strong></td>
+                                <td>次</td>
+                                <td>%</td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: %"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 大小比分析 -->
+        <section class="section">
+            <h2 class="section-title">📏 大小比分布</h2>
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <canvas id="bigSmallChart"></canvas>
+                </div>
+                <div class="table-wrapper">
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>大小比</th>
+                                <th>出现次数</th>
+                                <th>占比</th>
+                                <th>可视化</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#BIG_SMALL_DATA}}
+                            <tr>
+                                <td><strong></strong></td>
+                                <td>次</td>
+                                <td>%</td>
+                                <td>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" style="width: %"></div>
+                                    </div>
+                                </td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- 遗漏值分析 -->
+        <section class="section">
+            <h2 class="section-title">📉 遗漏值分析</h2>
+            <div class="chart-container full-width">
+                <canvas id="missingChart"></canvas>
+            </div>
+            <div class="table-wrapper">
+                <h4>当前遗漏值 TOP15</h4>
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>号码</th>
+                            <th>当前遗漏</th>
+                            <th>最大遗漏</th>
+                            <th>状态</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {{#MISSING_DATA}}
+                        <tr>
+                            <td><span class="number-tag "></span></td>
+                            <td>期</td>
+                            <td>期</td>
+                            <td><span class="status-badge "></span></td>
+                        </tr>
+                        
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 连号分析 -->
+        <section class="section">
+            <h2 class="section-title">🔗 连号分析</h2>
+            <div class="stats-grid small">
+                <div class="stat-card">
+                    <div class="stat-value">%</div>
+                    <div class="stat-label">出现连号概率</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">期</div>
+                    <div class="stat-label">出现连号期数</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">无</div>
+                    <div class="stat-label">最常见连号</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- 号码分布图 -->
+        <section class="section">
+            <h2 class="section-title">🎯 号码分布热力图</h2>
+            <div class="heatmap-container">
+                <div class="heatmap" id="numberHeatmap">
+                    {{#NUMBER_HEATMAP}}
+                    <div class="heatmap-cell " title="号码 : 出现  次">
+                        
+                    </div>
+                    
+                </div>
+            </div>
+        </section>
+
+        <!-- 固定号码分析（如有） -->
+        {{#HAS_FIXED_NUMBERS}}
+        <section class="section">
+            <h2 class="section-title">🔢 固定号码分析</h2>
+            <div class="fixed-numbers-section">
+                <div class="fixed-input">
+                    <h4>您输入的固定号码</h4>
+                    <div class="fixed-balls">
+                        {{#FIXED_RED}}
+                        <span class="ball ball-red fixed">{{.}}</span>
+                        
+                        {{#FIXED_BLUE}}
+                        <span class="ball ball-blue fixed">{{.}}</span>
+                        
+                    </div>
+                </div>
+                <div class="fixed-stats">
+                    <h4>历史表现</h4>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>号码</th>
+                                <th>出现次数</th>
+                                <th>当前遗漏</th>
+                                <th>状态</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {{#FIXED_STATS}}
+                            <tr>
+                                <td><span class="number-tag "></span></td>
+                                <td>次</td>
+                                <td>期</td>
+                                <td><span class="status-badge "></span></td>
+                            </tr>
+                            
+                        </tbody>
+                    </table>
+                </div>
+                <div class="recommendations">
+                    <h4>🎲 娱乐性推荐组合</h4>
+                    {{#RECOMMENDED_COMBINATIONS}}
+                    <div class="recommendation-item">
+                        <span class="combo-id">组合 </span>
+                        <div class="combo-balls">
+                            {{#RED_BALLS}}
+                            <span class="ball ball-red small">{{.}}</span>
+                            
+                            <span class="ball ball-blue small"></span>
+                        </div>
+                        <span class="combo-strategy"></span>
+                    </div>
+                    
+                </div>
+            </div>
+        </section>
+        
+
+        <!-- 页脚 -->
+        <footer class="report-footer">
+            <div class="footer-content">
+                <p class="disclaimer-text">
+                    ⚠️ 免责声明：本报告所有数据和分析仅供娱乐参考，不构成任何形式的投注建议。
+                    彩票开奖是完全随机的独立事件，历史数据对未来开奖没有任何预测价值。
+                </p>
+                <p class="source-info">
+                    数据来源: 中国福彩/体彩官网 | 报告生成时间: 2026-02-07 23:35:16
+                </p>
+                <p class="copyright">
+                    Lottery Analysis Agent v1.0.0 | Generated by Claude Code
+                </p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Chart.js 配置脚本 -->
+    <script>
+        // 热号图表
+        const hotCtx = document.getElementById('hotNumbersChart').getContext('2d');
+        new Chart(hotCtx, {
+            type: 'bar',
+            data: {
+                labels: ["28", "25", "30", "12", "19", "22", "29", "33", "16", "31"],
+                datasets: [{
+                    label: '出现次数',
+                    data: [7, 6, 6, 5, 5, 5, 5, 5, 5, 5],
+                    backgroundColor: '#F97316',
+                    borderColor: '#EA580C',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // 冷号图表
+        const coldCtx = document.getElementById('coldNumbersChart').getContext('2d');
+        new Chart(coldCtx, {
+            type: 'bar',
+            data: {
+                labels: ["10", "01", "14", "13", "06", "04", "02", "05", "03", "26"],
+                datasets: [{
+                    label: '遗漏期数',
+                    data: [2, 2, 3, 3, 3, 3, 3, 3, 3, 4],
+                    backgroundColor: '#06B6D4',
+                    borderColor: '#0891B2',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+
+        // 奇偶比饼图
+        const oddEvenCtx = document.getElementById('oddEvenChart').getContext('2d');
+        new Chart(oddEvenCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ["4:2", "3:3", "2:4", "5:1", "1:5", "0:6"],
+                datasets: [{
+                    data: [8, 6, 4, 2, 2, 1],
+                    backgroundColor: [
+                        '#EF4444',
+                        '#3B82F6',
+                        '#10B981',
+                        '#F59E0B',
+                        '#8B5CF6'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // 大小比饼图
+        const bigSmallCtx = document.getElementById('bigSmallChart').getContext('2d');
+        new Chart(bigSmallCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ["4:2", "3:3", "5:1"],
+                datasets: [{
+                    data: [12, 10, 1],
+                    backgroundColor: [
+                        '#EC4899',
+                        '#06B6D4',
+                        '#84CC16',
+                        '#F97316',
+                        '#6366F1'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom'
+                    }
+                }
+            }
+        });
+
+        // 遗漏值柱状图
+        const missingCtx = document.getElementById('missingChart').getContext('2d');
+        new Chart(missingCtx, {
+            type: 'bar',
+            data: {
+                labels: ["10", "01", "14", "06", "13", "04", "11", "17", "23", "26"],
+                datasets: [{
+                    label: '当前遗漏期数',
+                    data: [9, 7, 7, 6, 6, 5, 5, 5, 5, 5],
+                    backgroundColor: '#3B82F6',
+                    borderColor: '#2563EB',
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: { beginAtZero: true }
+                }
+            }
+        });
+    </script>
+</body>
+</html>
