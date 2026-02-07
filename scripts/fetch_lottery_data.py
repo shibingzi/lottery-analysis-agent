@@ -1,279 +1,378 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-彩票数据获取脚本
-支持双色球(SSQ)和大乐透(DLT)的数据获取与更新
+彩票数据获取脚本 - 分离历史数据和增量更新
+支持双色球(SSQ)和大乐透(DLT)
 
 用法:
-    python fetch_lottery_data.py --type ssq --limit 100
-    python fetch_lottery_data.py --type dlt --update
-    python fetch_lottery_data.py --all
+    # 获取历史数据（大量）
+    python fetch_lottery_data.py --type ssq --history --limit 1000
+    
+    # 增量更新（只获取新数据）
+    python fetch_lottery_data.py --type ssq --update
+    
+    # 从CSV导入历史数据
+    python fetch_lottery_data.py --type ssq --import-file history.csv
+    
+    # 查看最新开奖
+    python fetch_lottery_data.py --type ssq --latest
 """
 
 import argparse
 import json
 import os
 import sys
-import time
+import csv
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import List, Dict, Optional, Tuple
-import urllib.request
-import urllib.error
-import ssl
+import random
 
 # 配置日志
 logging.basicConfig(
     level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler('logs/data_fetch.log', encoding='utf-8'),
-        logging.StreamHandler()
-    ]
+    format='%(asctime)s - %(levelname)s - %(message)s'
 )
 logger = logging.getLogger(__name__)
 
-# 项目根目录
+# 项目路径
 PROJECT_ROOT = Path(__file__).parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
-CACHE_DIR = DATA_DIR / "cache"
-
-# 创建目录
-DATA_DIR.mkdir(exist_ok=True)
-CACHE_DIR.mkdir(exist_ok=True)
-(DATA_DIR / "ssq").mkdir(exist_ok=True)
-(DATA_DIR / "dlt").mkdir(exist_ok=True)
 
 # 彩票配置
 LOTTERY_CONFIG = {
     "ssq": {
         "name": "双色球",
+        "data_file": DATA_DIR / "ssq" / "history.json",
         "red_range": (1, 33),
         "blue_range": (1, 16),
-        "red_count": 6,
-        "blue_count": 1,
-        "draw_days": [2, 4, 0],  # 周二、周四、周日
-        "data_file": DATA_DIR / "ssq" / "history.json"
     },
     "dlt": {
         "name": "大乐透",
+        "data_file": DATA_DIR / "dlt" / "history.json",
         "front_range": (1, 35),
         "back_range": (1, 12),
-        "front_count": 5,
-        "back_count": 2,
-        "draw_days": [1, 3, 6],  # 周一、周三、周六
-        "data_file": DATA_DIR / "dlt" / "history.json"
     }
 }
 
 
-class LotteryDataFetcher:
-    """彩票数据获取器"""
+class LotteryDataManager:
+    """彩票数据管理器"""
     
     def __init__(self, lottery_type: str):
         self.lottery_type = lottery_type.lower()
-        config = LOTTERY_CONFIG.get(self.lottery_type)
-        if not config:
-            raise ValueError(f"不支持的彩票类型: {lottery_type}")
-        
-        self.config: Dict = config
-        self.data_file: Path = self.config["data_file"]
-        self.data: List[Dict] = self._load_existing_data()
-        
-    def _load_existing_data(self) -> List[Dict]:
+        self.config = LOTTERY_CONFIG[self.lottery_type]
+        self.data_file = self.config["data_file"]
+        self.data = self._load_data()
+    
+    def _load_data(self) -> List[Dict]:
         """加载已有数据"""
         if self.data_file.exists():
             try:
                 with open(self.data_file, 'r', encoding='utf-8') as f:
                     return json.load(f)
             except Exception as e:
-                logger.warning(f"加载已有数据失败: {e}")
+                logger.warning(f"加载数据失败: {e}")
         return []
     
     def _save_data(self):
-        """保存数据到文件"""
-        try:
-            # 按期号排序
-            self.data.sort(key=lambda x: x.get("issue", ""), reverse=True)
-            
-            with open(self.data_file, 'w', encoding='utf-8') as f:
-                json.dump(self.data, f, ensure_ascii=False, indent=2)
-            
-            logger.info(f"数据已保存: {self.data_file} ({len(self.data)} 条记录)")
-        except Exception as e:
-            logger.error(f"保存数据失败: {e}")
-            raise
+        """保存数据"""
+        self.data_file.parent.mkdir(parents=True, exist_ok=True)
+        # 按期号降序排序
+        self.data.sort(key=lambda x: x.get("issue", ""), reverse=True)
+        with open(self.data_file, 'w', encoding='utf-8') as f:
+            json.dump(self.data, f, ensure_ascii=False, indent=2)
+        logger.info(f"数据已保存: {self.data_file} ({len(self.data)} 条)")
     
-    def _create_ssl_context(self):
-        """创建SSL上下文（忽略证书验证）"""
-        context = ssl.create_default_context()
-        context.check_hostname = False
-        context.verify_mode = ssl.CERT_NONE
-        return context
-    
-    def fetch_from_api(self, limit: int = 100) -> List[Dict]:
+    def fetch_history_data(self, limit: int = 1000) -> Tuple[int, int]:
         """
-        从API获取彩票数据
-        注：这里使用模拟数据作为示例，实际使用时需要替换为真实的API
+        获取历史数据（大量）
+        用于首次填充或重新获取历史数据
+        
+        Returns: (新增数量, 总数量)
         """
-        logger.info(f"正在获取 {self.config['name']} 数据...")
+        logger.info(f"正在获取 {self.config['name']} 历史数据，目标 {limit} 期...")
         
-        # TODO: 替换为真实的数据源API
-        # 目前返回模拟数据用于测试
-        mock_data = self._generate_mock_data(limit)
-        
-        return mock_data
-    
-    def _generate_mock_data(self, limit: int) -> List[Dict]:
-        """生成模拟数据（用于测试）"""
-        import random
-        
-        data = []
-        base_date = datetime.now()
-        
-        for i in range(limit):
-            issue_date = base_date - timedelta(days=i*3)
-            issue_number = self._generate_issue_number(issue_date, i)
-            
-            if self.lottery_type == "ssq":
-                record = {
-                    "lottery_type": "ssq",
-                    "issue": issue_number,
-                    "draw_date": issue_date.strftime("%Y-%m-%d"),
-                    "red_balls": sorted(random.sample(range(1, 34), 6)),
-                    "blue_ball": random.randint(1, 16),
-                    "prize_info": {
-                        "jackpot": f"{random.randint(1, 20)}注",
-                        "jackpot_amount": f"{random.randint(500, 1000)}万元/注"
-                    }
-                }
-            else:  # dlt
-                record = {
-                    "lottery_type": "dlt",
-                    "issue": issue_number,
-                    "draw_date": issue_date.strftime("%Y-%m-%d"),
-                    "front_zone": sorted(random.sample(range(1, 36), 5)),
-                    "back_zone": sorted(random.sample(range(1, 13), 2)),
-                    "prize_info": {
-                        "jackpot": f"{random.randint(1, 15)}注",
-                        "jackpot_amount": f"{random.randint(500, 1000)}万元/注"
-                    }
-                }
-            
-            data.append(record)
-        
-        logger.info(f"生成了 {len(data)} 条模拟数据")
-        return data
-    
-    def _generate_issue_number(self, date: datetime, offset: int) -> str:
-        """生成期号"""
-        year = date.year
-        # 简化处理：假设每年约150-160期
-        issue_num = 160 - offset
-        if issue_num <= 0:
-            year -= 1
-            issue_num += 160
-        
-        if self.lottery_type == "ssq":
-            return f"{year}{issue_num:03d}"
-        else:
-            return f"{str(year)[2:]}{issue_num:03d}"
-    
-    def update_data(self, limit: int = 100) -> Tuple[int, int]:
-        """
-        更新数据
-        
-        Returns:
-            (新增记录数, 总记录数)
-        """
-        new_data = self.fetch_from_api(limit)
+        # TODO: 这里应该调用真实的历史数据API
+        # 目前使用模拟数据演示
+        new_data = self._generate_mock_history_data(limit)
         
         # 合并数据（去重）
         existing_issues = {item["issue"] for item in self.data}
-        added_count = 0
-        
+        added = 0
         for record in new_data:
             if record["issue"] not in existing_issues:
                 self.data.append(record)
                 existing_issues.add(record["issue"])
-                added_count += 1
+                added += 1
         
-        # 保存数据
         self._save_data()
-        
-        logger.info(f"更新完成: 新增 {added_count} 条记录，总计 {len(self.data)} 条")
-        return added_count, len(self.data)
+        logger.info(f"历史数据获取完成: 新增 {added} 条，总计 {len(self.data)} 条")
+        return added, len(self.data)
     
-    def get_latest(self) -> Optional[Dict]:
-        """获取最新一期数据"""
+    def fetch_latest_data(self, days: int = 7) -> Tuple[int, int]:
+        """
+        获取最新数据（增量更新）
+        只获取最近几天的开奖数据
+        
+        Args:
+            days: 获取最近多少天的数据
+        
+        Returns: (新增数量, 总数量)
+        """
+        logger.info(f"正在检查 {self.config['name']} 最新数据（最近{days}天）...")
+        
+        # TODO: 这里应该调用真实的最新数据API
+        # 目前使用模拟数据演示
+        new_data = self._generate_mock_latest_data(days)
+        
+        # 合并数据（去重）
+        existing_issues = {item["issue"] for item in self.data}
+        added = 0
+        for record in new_data:
+            if record["issue"] not in existing_issues:
+                self.data.append(record)
+                existing_issues.add(record["issue"])
+                added += 1
+        
+        if added > 0:
+            self._save_data()
+            logger.info(f"增量更新完成: 新增 {added} 条，总计 {len(self.data)} 条")
+        else:
+            logger.info("数据已是最新，无需更新")
+        
+        return added, len(self.data)
+    
+    def import_from_csv(self, csv_file: str) -> Tuple[int, int]:
+        """
+        从CSV文件导入历史数据
+        
+        CSV格式示例:
+        issue,draw_date,red_balls,blue_ball
+        2025023,2025-03-02,03 07 12 18 25 30,14
+        """
+        logger.info(f"正在从CSV导入数据: {csv_file}")
+        
+        csv_path = Path(csv_file)
+        if not csv_path.exists():
+            raise FileNotFoundError(f"CSV文件不存在: {csv_file}")
+        
+        imported = 0
+        with open(csv_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    if self.lottery_type == "ssq":
+                        record = {
+                            "lottery_type": "ssq",
+                            "issue": row["issue"],
+                            "draw_date": row["draw_date"],
+                            "red_balls": [int(x) for x in row["red_balls"].split()],
+                            "blue_ball": int(row["blue_ball"]),
+                            "prize_info": {}
+                        }
+                    else:  # dlt
+                        record = {
+                            "lottery_type": "dlt",
+                            "issue": row["issue"],
+                            "draw_date": row["draw_date"],
+                            "front_zone": [int(x) for x in row["front_zone"].split()],
+                            "back_zone": [int(x) for x in row["back_zone"].split()],
+                            "prize_info": {}
+                        }
+                    
+                    # 检查是否已存在
+                    if not any(d["issue"] == record["issue"] for d in self.data):
+                        self.data.append(record)
+                        imported += 1
+                except Exception as e:
+                    logger.warning(f"导入行失败: {row}, 错误: {e}")
+        
+        self._save_data()
+        logger.info(f"CSV导入完成: 导入 {imported} 条，总计 {len(self.data)} 条")
+        return imported, len(self.data)
+    
+    def export_to_csv(self, csv_file: str, limit: Optional[int] = None):
+        """导出数据到CSV文件"""
+        logger.info(f"正在导出数据到CSV: {csv_file}")
+        
+        data_to_export = self.data[:limit] if limit else self.data
+        
+        with open(csv_file, 'w', newline='', encoding='utf-8') as f:
+            if self.lottery_type == "ssq":
+                fieldnames = ["issue", "draw_date", "red_balls", "blue_ball"]
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                for record in data_to_export:
+                    writer.writerow({
+                        "issue": record["issue"],
+                        "draw_date": record["draw_date"],
+                        "red_balls": " ".join(f"{x:02d}" for x in record["red_balls"]),
+                        "blue_ball": record["blue_ball"]
+                    })
+            else:  # dlt
+                fieldnames = ["issue", "draw_date", "front_zone", "back_zone"]
+                writer = csv.DictWriter(f, fieldnames=fieldnames)
+                writer.writeheader()
+                for record in data_to_export:
+                    writer.writerow({
+                        "issue": record["issue"],
+                        "draw_date": record["draw_date"],
+                        "front_zone": " ".join(f"{x:02d}" for x in record["front_zone"]),
+                        "back_zone": " ".join(f"{x:02d}" for x in record["back_zone"])
+                    })
+        
+        logger.info(f"导出完成: {len(data_to_export)} 条记录 -> {csv_file}")
+    
+    def get_stats(self) -> Dict:
+        """获取数据统计信息"""
         if not self.data:
-            self.update_data(10)
+            return {"count": 0, "latest_issue": None, "oldest_issue": None}
         
-        if self.data:
-            return max(self.data, key=lambda x: x.get("issue", ""))
-        return None
+        sorted_data = sorted(self.data, key=lambda x: x["issue"])
+        return {
+            "count": len(self.data),
+            "latest_issue": sorted_data[-1]["issue"],
+            "latest_date": sorted_data[-1]["draw_date"],
+            "oldest_issue": sorted_data[0]["issue"],
+            "oldest_date": sorted_data[0]["draw_date"],
+        }
     
-    def get_by_issue(self, issue: str) -> Optional[Dict]:
-        """根据期号获取数据"""
-        for record in self.data:
-            if record["issue"] == issue:
-                return record
-        return None
-    
-    def get_history(self, limit: int = 100) -> List[Dict]:
-        """获取历史数据"""
-        if not self.data:
-            self.update_data(limit)
+    def _generate_mock_history_data(self, limit: int) -> List[Dict]:
+        """生成模拟历史数据（用于测试）"""
+        logger.info(f"生成 {limit} 条模拟历史数据...")
+        data = []
+        base_date = datetime.now() - timedelta(days=limit*3)
         
-        # 按日期排序并限制数量
-        sorted_data = sorted(self.data, key=lambda x: x.get("draw_date", ""), reverse=True)
-        return sorted_data[:limit]
+        for i in range(limit):
+            issue_date = base_date + timedelta(days=i*3)
+            
+            if self.lottery_type == "ssq":
+                year = issue_date.year
+                issue_num = i + 1
+                record = {
+                    "lottery_type": "ssq",
+                    "issue": f"{year}{issue_num:03d}",
+                    "draw_date": issue_date.strftime("%Y-%m-%d"),
+                    "red_balls": sorted(random.sample(range(1, 34), 6)),
+                    "blue_ball": random.randint(1, 16),
+                    "prize_info": {}
+                }
+            else:  # dlt
+                year = issue_date.year % 100
+                issue_num = i + 1
+                record = {
+                    "lottery_type": "dlt",
+                    "issue": f"{year}{issue_num:03d}",
+                    "draw_date": issue_date.strftime("%Y-%m-%d"),
+                    "front_zone": sorted(random.sample(range(1, 36), 5)),
+                    "back_zone": sorted(random.sample(range(1, 13), 2)),
+                    "prize_info": {}
+                }
+            
+            data.append(record)
+        
+        return data
+    
+    def _generate_mock_latest_data(self, days: int) -> List[Dict]:
+        """生成模拟最新数据（用于测试）"""
+        data = []
+        today = datetime.now()
+        
+        # 生成最近几天的数据
+        for i in range(days // 3):  # 假设每3天一期
+            issue_date = today - timedelta(days=i*3)
+            
+            if self.lottery_type == "ssq":
+                year = issue_date.year
+                # 简化期号计算
+                issue_num = (issue_date.timetuple().tm_yday // 3) + 1
+                record = {
+                    "lottery_type": "ssq",
+                    "issue": f"{year}{issue_num:03d}",
+                    "draw_date": issue_date.strftime("%Y-%m-%d"),
+                    "red_balls": sorted(random.sample(range(1, 34), 6)),
+                    "blue_ball": random.randint(1, 16),
+                    "prize_info": {}
+                }
+            else:  # dlt
+                year = issue_date.year % 100
+                issue_num = (issue_date.timetuple().tm_yday // 3) + 1
+                record = {
+                    "lottery_type": "dlt",
+                    "issue": f"{year}{issue_num:03d}",
+                    "draw_date": issue_date.strftime("%Y-%m-%d"),
+                    "front_zone": sorted(random.sample(range(1, 36), 5)),
+                    "back_zone": sorted(random.sample(range(1, 13), 2)),
+                    "prize_info": {}
+                }
+            
+            data.append(record)
+        
+        return data
 
 
 def main():
-    """主函数"""
     parser = argparse.ArgumentParser(
-        description="彩票数据获取工具",
+        description="彩票数据获取工具 - 分离历史数据和增量更新",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 示例:
-  %(prog)s --type ssq --limit 50          # 获取双色球最近50期
-  %(prog)s --type dlt --update            # 更新大乐透数据
-  %(prog)s --all --limit 100              # 获取所有彩种100期数据
+  # 获取历史数据（首次使用或重新获取）
+  %(prog)s --type ssq --history --limit 1000
+  
+  # 增量更新（日常使用）
+  %(prog)s --type ssq --update
+  %(prog)s --type ssq --update --days 14
+  
+  # 从CSV导入
+  %(prog)s --type ssq --import-file history.csv
+  
+  # 导出到CSV
+  %(prog)s --type ssq --export-file backup.csv
+  
+  # 查看统计信息
+  %(prog)s --type ssq --stats
+  
+  # 查看最新开奖
+  %(prog)s --type ssq --latest
+  
+  # 更新所有彩种
+  %(prog)s --all --update
         """
     )
     
-    parser.add_argument(
-        "--type", "-t",
-        choices=["ssq", "dlt"],
-        help="彩票类型: ssq=双色球, dlt=大乐透"
-    )
+    parser.add_argument("--type", "-t", choices=["ssq", "dlt"],
+                       help="彩票类型: ssq=双色球, dlt=大乐透")
+    parser.add_argument("--all", "-a", action="store_true",
+                       help="处理所有彩种")
     
-    parser.add_argument(
-        "--limit", "-l",
-        type=int,
-        default=100,
-        help="获取数据条数 (默认: 100)"
-    )
+    # 历史数据获取
+    parser.add_argument("--history", action="store_true",
+                       help="获取历史数据（大量）")
+    parser.add_argument("--limit", "-l", type=int, default=1000,
+                       help="获取历史数据的期数 (默认: 1000)")
     
-    parser.add_argument(
-        "--update", "-u",
-        action="store_true",
-        help="更新模式：只获取新数据"
-    )
+    # 增量更新
+    parser.add_argument("--update", "-u", action="store_true",
+                       help="增量更新（只获取新数据）")
+    parser.add_argument("--days", type=int, default=7,
+                       help="增量更新时获取最近多少天的数据 (默认: 7)")
     
-    parser.add_argument(
-        "--all", "-a",
-        action="store_true",
-        help="获取所有支持的彩种"
-    )
+    # 导入导出
+    parser.add_argument("--import-file",
+                       help="从CSV文件导入数据")
+    parser.add_argument("--export-file",
+                       help="导出数据到CSV文件")
+    parser.add_argument("--export-limit", type=int,
+                       help="导出时限制记录数")
     
-    parser.add_argument(
-        "--latest",
-        action="store_true",
-        help="只显示最新一期"
-    )
+    # 查询
+    parser.add_argument("--stats", action="store_true",
+                       help="显示数据统计信息")
+    parser.add_argument("--latest", action="store_true",
+                       help="显示最新开奖信息")
     
     args = parser.parse_args()
     
@@ -282,52 +381,67 @@ def main():
         parser.print_help()
         sys.exit(1)
     
-    # 确定要处理的彩种
-    types_to_process = ["ssq", "dlt"] if args.all else [args.type]
+    types = ["ssq", "dlt"] if args.all else [args.type]
     
-    results = {}
-    
-    for lottery_type in types_to_process:
+    # 执行操作
+    for lottery_type in types:
         try:
-            fetcher = LotteryDataFetcher(lottery_type)
+            manager = LotteryDataManager(lottery_type)
             
-            if args.latest:
-                # 只显示最新一期
-                latest = fetcher.get_latest()
-                if latest:
-                    print(f"\n🎱 {fetcher.config['name']} 最新开奖")
-                    print(f"期号: {latest['issue']}")
-                    print(f"日期: {latest['draw_date']}")
-                    
-                    if lottery_type == "ssq":
-                        print(f"红球: {' '.join(f'{n:02d}' for n in latest['red_balls'])}")
-                        print(f"蓝球: {latest['blue_ball']:02d}")
-                    else:
-                        print(f"前区: {' '.join(f'{n:02d}' for n in latest['front_zone'])}")
-                        print(f"后区: {' '.join(f'{n:02d}' for n in latest['back_zone'])}")
-                else:
-                    print(f"未找到 {fetcher.config['name']} 数据")
-            else:
-                # 更新或获取数据
-                added, total = fetcher.update_data(args.limit)
-                results[lottery_type] = {"added": added, "total": total}
+            if args.history:
+                # 获取历史数据
+                added, total = manager.fetch_history_data(args.limit)
+                print(f"\n✅ {manager.config['name']} 历史数据获取完成")
+                print(f"   新增: {added} 条")
+                print(f"   总计: {total} 条")
                 
+            elif args.update:
+                # 增量更新
+                added, total = manager.fetch_latest_data(args.days)
+                print(f"\n✅ {manager.config['name']} 增量更新完成")
+                print(f"   新增: {added} 条")
+                print(f"   总计: {total} 条")
+                
+            elif args.import_file:
+                # 从CSV导入
+                imported, total = manager.import_from_csv(args.import_file)
+                print(f"\n✅ {manager.config['name']} CSV导入完成")
+                print(f"   导入: {imported} 条")
+                print(f"   总计: {total} 条")
+                
+            elif args.export_file:
+                # 导出到CSV
+                manager.export_to_csv(args.export_file, args.export_limit)
+                
+            elif args.stats:
+                # 显示统计
+                stats = manager.get_stats()
+                print(f"\n📊 {manager.config['name']} 数据统计")
+                print(f"   总记录数: {stats['count']}")
+                if stats['count'] > 0:
+                    print(f"   最新期号: {stats['latest_issue']} ({stats['latest_date']})")
+                    print(f"   最早期号: {stats['oldest_issue']} ({stats['oldest_date']})")
+                    
+            elif args.latest:
+                # 显示最新开奖
+                if manager.data:
+                    latest = max(manager.data, key=lambda x: x['issue'])
+                    print(f"\n🎱 {manager.config['name']} 最新开奖")
+                    print(f"   期号: {latest['issue']}")
+                    print(f"   日期: {latest['draw_date']}")
+                    if lottery_type == "ssq":
+                        print(f"   红球: {' '.join(f'{x:02d}' for x in latest['red_balls'])}")
+                        print(f"   蓝球: {latest['blue_ball']:02d}")
+                    else:
+                        print(f"   前区: {' '.join(f'{x:02d}' for x in latest['front_zone'])}")
+                        print(f"   后区: {' '.join(f'{x:02d}' for x in latest['back_zone'])}")
+                else:
+                    print(f"   暂无数据")
+                    
         except Exception as e:
             logger.error(f"处理 {lottery_type} 时出错: {e}")
-            results[lottery_type] = {"error": str(e)}
-    
-    # 打印汇总
-    if not args.latest:
-        print("\n" + "="*50)
-        print("📊 数据更新汇总")
-        print("="*50)
-        for lottery_type, result in results.items():
-            config = LOTTERY_CONFIG[lottery_type]
-            if "error" in result:
-                print(f"❌ {config['name']}: 失败 - {result['error']}")
-            else:
-                print(f"✅ {config['name']}: 新增 {result['added']} 条，总计 {result['total']} 条")
-        print("="*50)
+            import traceback
+            traceback.print_exc()
 
 
 if __name__ == "__main__":
