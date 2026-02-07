@@ -274,27 +274,51 @@ class ReportGenerator:
     
     def _generate_heatmap_section(self, analysis_data: Dict) -> Dict:
         """生成号码分布热力图"""
-        hot_cold = analysis_data.get("hot_cold", {})
+        from collections import Counter
+        
+        # 从原始数据重新统计所有号码的出现次数
+        with open(self.config["data_file"], 'r', encoding='utf-8') as f:
+            all_data = json.load(f)
+        
+        # 获取分析期数对应的数据
+        periods = analysis_data.get("periods_analyzed", 100)
+        recent_data = all_data[:periods]
         
         if self.lottery_type == "ssq":
-            red_hot = dict(hot_cold.get("red_balls", {}).get("hot", []))
+            # 统计所有红球出现次数
+            red_balls = []
+            for record in recent_data:
+                red_balls.extend(record.get("red_balls", []))
+            counter = Counter(red_balls)
             numbers_range = range(1, 34)
-        else:
-            red_hot = dict(hot_cold.get("front_zone", {}).get("hot", []))
+        else:  # dlt
+            # 统计所有前区号码出现次数
+            front_zone = []
+            for record in recent_data:
+                front_zone.extend(record.get("front_zone", []))
+            counter = Counter(front_zone)
             numbers_range = range(1, 36)
         
-        heatmap_data = []
-        max_count = max(red_hot.values()) if red_hot else 1
+        # 生成所有号码的统计数据
+        all_counts = {num: counter.get(num, 0) for num in numbers_range}
+        max_count = max(all_counts.values()) if all_counts else 1
         
+        heatmap_data = []
         for num in numbers_range:
-            count = red_hot.get(num, 0)
+            count = all_counts[num]
             # 根据频率确定热度等级
-            if count >= max_count * 0.8:
-                heat_class = "hot-3"
-            elif count >= max_count * 0.6:
-                heat_class = "hot-2"
-            elif count >= max_count * 0.4:
-                heat_class = "hot-1"
+            if max_count > 0:
+                ratio = count / max_count
+                if ratio >= 0.8:
+                    heat_class = "hot-3"
+                elif ratio >= 0.6:
+                    heat_class = "hot-2"
+                elif ratio >= 0.4:
+                    heat_class = "hot-1"
+                elif count > 0:
+                    heat_class = "heat-1"
+                else:
+                    heat_class = "cold"
             else:
                 heat_class = "cold"
             
@@ -437,6 +461,9 @@ class ReportGenerator:
         for key, value in data.items():
             if isinstance(value, str):
                 result = result.replace(f"{{{{{key}}}}}", value)
+            elif isinstance(value, (int, float)):
+                # 处理数字类型，转换为字符串
+                result = result.replace(f"{{{{{key}}}}}", str(value))
             elif isinstance(value, bool):
                 # 处理条件块 {{#KEY}}...{{/KEY}}
                 if value:
